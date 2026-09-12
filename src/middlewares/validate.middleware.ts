@@ -1,9 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 import { ZodSchema } from "zod";
 
-const validate = (schema: ZodSchema) => {
+const validate = (
+  schema: ZodSchema,
+  target: "body" | "query" | "params" = "body",
+) => {
   return (req: Request, res: Response, next: NextFunction) => {
-    const result = schema.safeParse(req.body);
+    const result = schema.safeParse(req[target]);
 
     if (!result.success) {
       return res.status(400).json({
