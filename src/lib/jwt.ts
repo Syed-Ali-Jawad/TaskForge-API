@@ -1,5 +1,6 @@
 import jwt, { SignOptions } from "jsonwebtoken";
 import env from "../config/env";
+import AppError from "../error/app-error";
 
 const signToken = (payload: object) => {
   const options: SignOptions = {

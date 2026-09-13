@@ -31,39 +31,39 @@ workspaceRouter.post(
 
 workspaceRouter.get("/", getWorkspacesHandler);
 
-workspaceRouter.get(
-  "/:id",
-  validate(paramsIdSchema, "params"),
-  getWorkspaceByIdHandler,
-);
+workspaceRouter.get("/:id", validate(paramsIdSchema), getWorkspaceByIdHandler);
 
 workspaceRouter.patch(
   "/:id",
-  validate(paramsIdSchema, "params"),
+  validate(paramsIdSchema),
   validate(updateWorkspaceByIdSchema),
   updateWorkspaceByIdHandler,
 );
 
 workspaceRouter.delete(
   "/:id",
-  validate(paramsIdSchema, "params"),
+  validate(paramsIdSchema),
   deleteWorkspaceHandler,
 );
 
 workspaceRouter.patch(
   "/:id/members",
-  validate(paramsIdSchema, "params"),
+  validate(paramsIdSchema),
   validate(updateWorkspaceMemberSchema),
   updatedWorkspaceMemberHandler,
 );
 
 workspaceRouter.post(
   "/:id/members",
-  validate(paramsIdSchema, "params"),
+  validate(paramsIdSchema),
   validate(addWorkspaceMemberSchema),
   addWorkspaceMemberHandler,
 );
 
-workspaceRouter.delete("/:id/members", validate(paramsIdSchema, "params"), deleteMemberFromWorkspaceHandler);
+workspaceRouter.delete(
+  "/:id/members",
+  validate(paramsIdSchema),
+  deleteMemberFromWorkspaceHandler,
+);
 
 export default workspaceRouter;

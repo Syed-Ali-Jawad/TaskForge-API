@@ -1,22 +1,26 @@
 import { Request, Response, NextFunction } from "express";
 import { ZodSchema } from "zod";
+import AppError from "../error/app-error";
+import { paramsIdSchema } from "../validators/common.validators";
+import { paramWorkspaceIdSchema } from "../validators/project.validators";
 
 const validate = (
   schema: ZodSchema,
   target: "body" | "query" | "params" = "body",
 ) => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    const result = schema.safeParse(req[target]);
+  return (req: Request, _res: Response, next: NextFunction) => {
+    const targetValue = paramsSchemas.includes(schema) ? "params" : target;
+    const result = schema.safeParse(req[targetValue]);
 
     if (!result.success) {
-      return res.status(400).json({
-        error: result.error.issues[0].message,
-      });
+      return next(new AppError(400, result.error.issues[0].message));
     }
 
-    req.body = result.data;
+    req[targetValue] = result.data;
     next();
   };
 };
 
 export default validate;
+
+const paramsSchemas: ZodSchema[] = [paramsIdSchema, paramWorkspaceIdSchema];

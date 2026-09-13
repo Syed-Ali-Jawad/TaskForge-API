@@ -8,3 +8,5 @@ class AppError extends Error {
     this.message = message;
   }
 }
+
+export default AppError;
