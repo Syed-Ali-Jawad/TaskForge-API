@@ -3,6 +3,7 @@ import { ZodSchema } from "zod";
 import AppError from "../error/app-error";
 import { paramsIdSchema } from "../validators/common.validators";
 import { paramWorkspaceIdSchema } from "../validators/project.validators";
+import { paramsProjectIdSchema } from "../validators/task.validators";
 
 const validate = (
   schema: ZodSchema,
@@ -23,4 +24,8 @@ const validate = (
 
 export default validate;
 
-const paramsSchemas: ZodSchema[] = [paramsIdSchema, paramWorkspaceIdSchema];
+const paramsSchemas: ZodSchema[] = [
+  paramsIdSchema,
+  paramWorkspaceIdSchema,
+  paramsProjectIdSchema,
+];
