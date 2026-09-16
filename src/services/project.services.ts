@@ -1,8 +1,15 @@
-import { ProjectStatus } from "../generated/prisma/enums";
+import AppError from "../error/app-error";
+import { ProjectStatus, Role } from "../generated/prisma/enums";
 import prisma from "../lib/prisma";
+import { checkAuthorization } from "../lib/utils";
 import { ProjectBody } from "../types/project.types";
 
-const addProject = async (workspaceId: string, body: ProjectBody) => {
+const addProject = async (
+  userId: string,
+  workspaceId: string,
+  body: ProjectBody,
+) => {
+  await checkAuthorization(userId, workspaceId);
   const addedProject = await prisma.project.create({
     data: {
       name: body.name,
@@ -23,7 +30,17 @@ const addProject = async (workspaceId: string, body: ProjectBody) => {
   return addedProject;
 };
 
-const getProjects = async (workspaceId: string) => {
+const getProjects = async (userId: string, workspaceId: string) => {
+  const userRole = await prisma.workspaceMember.findUnique({
+    where: {
+      userId_workspaceId: {
+        userId,
+        workspaceId,
+      },
+    },
+    select: { role: true },
+  });
+
   const projects = await prisma.project.findMany({
     where: {
       workspaceId,
@@ -34,6 +51,7 @@ const getProjects = async (workspaceId: string) => {
       shortKey: true,
       description: true,
       status: true,
+      tasks: userRole.role !== Role.MEMBER,
     },
   });
 
@@ -60,10 +78,27 @@ const getProjectById = async (workspaceId: string, projectId: string) => {
 };
 
 const updateProjectById = async (
+  userId: string,
   projectId: string,
   workspaceId: string,
   body: Partial<ProjectBody>,
 ) => {
+  await checkAuthorization(userId, workspaceId);
+
+  const project = await prisma.project.findUnique({
+    where: {
+      id: projectId,
+      workspaceId,
+    },
+    select: {
+      isArchived: true,
+    },
+  });
+
+  if (project.isArchived) {
+    throw new AppError(409, "Archived project can not be edited");
+  }
+
   const updatedProject = await prisma.project.update({
     data: {
       ...body,
@@ -77,7 +112,13 @@ const updateProjectById = async (
   return updatedProject;
 };
 
-const deleteProject = async (id: string) => {
+const deleteProject = async (
+  userId: string,
+  workspaceId: string,
+  id: string,
+) => {
+  await checkAuthorization(userId, workspaceId);
+
   const deletedProject = await prisma.project.delete({
     where: {
       id,

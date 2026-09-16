@@ -10,7 +10,7 @@ import {
 const addProjectHandler = async (req: Request, res: Response) => {
   const { workspaceId } = getParams(req.params);
 
-  const addedProject = await addProject(workspaceId, req.body);
+  const addedProject = await addProject(req.userId, workspaceId, req.body);
 
   return res.status(201).json({
     message: `${addedProject.name}[${addedProject.shortKey}] is added into workspace (${addedProject.workspace.name})`,
@@ -20,7 +20,7 @@ const addProjectHandler = async (req: Request, res: Response) => {
 const getProjectsHandler = async (req: Request, res: Response) => {
   const { workspaceId } = getParams(req.params);
 
-  const projects = await getProjects(workspaceId);
+  const projects = await getProjects(req.userId, workspaceId);
 
   return res.status(200).json({ projects });
 };
@@ -37,6 +37,7 @@ const updateProjectByIdHandler = async (req: Request, res: Response) => {
   const { workspaceId, projectId } = getParams(req.params);
 
   const updatedProject = await updateProjectById(
+    req.userId,
     projectId,
     workspaceId,
     req.body,
@@ -46,9 +47,13 @@ const updateProjectByIdHandler = async (req: Request, res: Response) => {
 };
 
 const deleteProjectHandler = async (req: Request, res: Response) => {
-  const { projectId } = getParams(req.params);
+  const { projectId, workspaceId } = getParams(req.params);
 
-  const deletedProject = await deleteProject(projectId);
+  const deletedProject = await deleteProject(
+    req.userId,
+    workspaceId,
+    projectId,
+  );
 
   return res
     .status(200)

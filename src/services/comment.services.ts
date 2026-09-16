@@ -1,6 +1,7 @@
 import prisma from "../lib/prisma";
 
 const updateComment = async (
+  userId: string,
   taskId: string,
   commentId: string,
   comment: string,
@@ -9,6 +10,7 @@ const updateComment = async (
     where: {
       taskId,
       id: commentId,
+      authorId: userId,
     },
     data: { comment },
     select: {
@@ -42,9 +44,14 @@ const addComment = async (
   return addedComment;
 };
 
-const deleteComment = async (taskId: string, commentId: string) => {
+const deleteComment = async (
+  userId: string,
+  taskId: string,
+  commentId: string,
+) => {
   const deletedComment = await prisma.comment.delete({
     where: {
+      authorId: userId,
       taskId,
       id: commentId,
     },

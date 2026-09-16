@@ -1,5 +1,6 @@
 import { Role } from "../generated/prisma/enums";
 import prisma from "../lib/prisma";
+import { checkAuthorization } from "../lib/utils";
 
 const createWorkspace = async (userId: string, name: string) => {
   const workspace = await prisma.workspace.create({
@@ -138,6 +139,7 @@ const addWorkspaceMember = async (
   workspaceId: string,
   role: Role,
 ) => {
+  await checkAuthorization(userId, workspaceId);
   const addedMember = await prisma.workspaceMember.create({
     data: {
       userId,
@@ -157,6 +159,7 @@ const deleteMemberFromWorkspace = async (
   workspaceId: string,
   userId: string,
 ) => {
+  await checkAuthorization(userId, workspaceId);
   const deletedMember = await prisma.workspaceMember.delete({
     where: {
       userId_workspaceId: {
@@ -185,3 +188,5 @@ export {
   addWorkspaceMember,
   deleteMemberFromWorkspace,
 };
+
+

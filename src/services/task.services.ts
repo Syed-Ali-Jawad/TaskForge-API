@@ -2,6 +2,7 @@ import { TaskPriority, TaskStatus } from "../generated/prisma/enums";
 import type { Prisma } from "../generated/prisma/client";
 import prisma from "../lib/prisma";
 import { TaskBody } from "../types/task.types";
+import AppError from "../error/app-error";
 
 const taskFetch = {
   id: true,
@@ -52,6 +53,10 @@ const getTaskById = async (projectId: string, id: string) => {
 };
 
 const addTask = async (projectId: string, body: TaskBody) => {
+  await checkIfProjectArchived(
+    projectId,
+    "Archived project can't receive new tasks.",
+  );
   const addedTask = await prisma.task.create({
     data: {
       ...body,
@@ -70,6 +75,10 @@ const updateTaskById = async (
   taskId: string,
   body: Partial<TaskBody>,
 ) => {
+  await checkIfProjectArchived(
+    projectId,
+    "Archived project can not recieve task updates.",
+  );
   const updatedTask = await prisma.task.update({
     where: { projectId, id: taskId },
     data: { ...body } as Prisma.TaskUncheckedUpdateInput,
@@ -79,6 +88,11 @@ const updateTaskById = async (
 };
 
 const deleteTask = async (projectId: string, id: string) => {
+  await checkIfProjectArchived(
+    projectId,
+    "Task of an archived project can not be deleted.",
+  );
+  
   const deletedTask = await prisma.task.delete({
     where: {
       projectId,
@@ -96,3 +110,18 @@ const deleteTask = async (projectId: string, id: string) => {
 };
 
 export { getTasks, getTaskById, addTask, updateTaskById, deleteTask };
+
+const checkIfProjectArchived = async (projectId: string, error: string) => {
+  const project = await prisma.project.findUnique({
+    where: {
+      id: projectId,
+    },
+    select: {
+      isArchived: true,
+    },
+  });
+
+  if (project?.isArchived) {
+    throw new AppError(409, error);
+  }
+};
