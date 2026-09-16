@@ -6,6 +6,8 @@ import { paramWorkspaceIdSchema } from "../validators/project.validators";
 import validate from "../middlewares/validate.middleware";
 import taskRouter from "./task.routes";
 import { paramsProjectIdSchema } from "../validators/task.validators";
+import { paramsTaskId } from "../validators/comment.validators";
+import commentRouter from "./comment.routes";
 
 const appRouter = Router();
 
@@ -18,10 +20,12 @@ appRouter.use(
 );
 
 appRouter.use(
-  "/workspaces/:workspaceId/projects/:projectId/tasks",
+  "/projects/:projectId/tasks",
   validate(paramWorkspaceIdSchema),
   validate(paramsProjectIdSchema),
   taskRouter,
 );
+
+appRouter.use("/tasks/:taskId/comments", validate(paramsTaskId), commentRouter);
 
 export default appRouter;
