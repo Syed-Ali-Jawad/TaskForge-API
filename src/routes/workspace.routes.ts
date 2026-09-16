@@ -13,6 +13,7 @@ import {
   deleteMemberFromWorkspaceHandler,
   deleteWorkspaceHandler,
   getWorkspaceByIdHandler,
+  getWorkspaceMembersHandler,
   getWorkspacesHandler,
   updatedWorkspaceMemberHandler,
   updateWorkspaceByIdHandler,
@@ -45,6 +46,8 @@ workspaceRouter.delete(
   validate(paramsIdSchema),
   deleteWorkspaceHandler,
 );
+
+workspaceRouter.get("/:id/members", validate(paramsIdSchema), getWorkspaceMembersHandler)
 
 workspaceRouter.patch(
   "/:id/members",

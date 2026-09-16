@@ -4,6 +4,7 @@ import {
   createWorkspace,
   deleteMemberFromWorkspace,
   deleteWorkspace,
+  getWorkspaceMembers,
   getWorkSpacesById,
   getWorkSpacesByUserId,
   updateWorkspaceById,
@@ -92,6 +93,14 @@ const deleteMemberFromWorkspaceHandler = async (
   });
 };
 
+const getWorkspaceMembersHandler = async (req: Request, res: Response) => {
+  const workspaceId = req.params.id?.[0];
+
+  const members = await getWorkspaceMembers(workspaceId);
+
+  return res.status(200).json({ members });
+};
+
 export {
   createWorkspaceHandler,
   getWorkspacesHandler,
@@ -101,4 +110,5 @@ export {
   updatedWorkspaceMemberHandler,
   addWorkspaceMemberHandler,
   deleteMemberFromWorkspaceHandler,
+  getWorkspaceMembersHandler
 };

@@ -9,7 +9,12 @@ const updateCommentHandler = async (req: Request, res: Response) => {
   const { taskId, commentId } = getParams(req.params);
   const { comment } = req.body;
 
-  const updatedComment = await updateComment(taskId, commentId, comment);
+  const updatedComment = await updateComment(
+    req.userId,
+    taskId,
+    commentId,
+    comment,
+  );
 
   return res.status(200).json(updatedComment);
 };
@@ -26,7 +31,7 @@ const addCommentHandler = async (req: Request, res: Response) => {
 const deleteCommentHandler = async (req: Request, res: Response) => {
   const { taskId, commentId } = getParams(req.params);
 
-  await deleteComment(taskId, commentId);
+  await deleteComment(req.userId, taskId, commentId);
 
   return res.status(200).json({ success: true });
 };

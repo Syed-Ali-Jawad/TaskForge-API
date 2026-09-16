@@ -155,6 +155,23 @@ const addWorkspaceMember = async (
   return addedMember;
 };
 
+const getWorkspaceMembers = async (workspaceId: string) => {
+  const members = await prisma.workspace.findUnique({
+    where: {
+      id: workspaceId,
+    },
+    select: {
+      members: {
+        id: true,
+        name: true,
+        role: true,
+      },
+    },
+  });
+
+  return members;
+};
+
 const deleteMemberFromWorkspace = async (
   workspaceId: string,
   userId: string,
@@ -187,6 +204,5 @@ export {
   updateWorkspaceMember,
   addWorkspaceMember,
   deleteMemberFromWorkspace,
+  getWorkspaceMembers,
 };
-
-
