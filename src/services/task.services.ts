@@ -74,7 +74,7 @@ const updateTaskById = async (
   userId: string,
   projectId: string,
   taskId: string,
-  body: Partial<TaskBody>,
+  body: Partial<TaskBody> & { status?: TaskStatus },
 ) => {
   await checkIfProjectArchived(
     projectId,
@@ -92,14 +92,21 @@ const updateTaskById = async (
           }
         : {}),
     },
-    data: { ...body } as Prisma.TaskUncheckedUpdateInput,
+    data: {
+      ...body,
+      ...(body.status === TaskStatus.DONE
+        ? { completionDate: new Date() }
+        : body.status
+          ? { completionDate: null }
+          : {}),
+    } as Prisma.TaskUncheckedUpdateInput,
   });
 
-  if (updatedTask.count === 0) {
+  if (updatedTask.length === 0) {
     throw new AppError(404, "Task not found or not authorized");
   }
 
-  return updateTaskById;
+  return updatedTask;
 };
 
 const deleteTask = async (userId: string, projectId: string, id: string) => {
