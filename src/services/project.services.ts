@@ -2,7 +2,7 @@ import AppError from "../error/app-error";
 import { ProjectStatus, Role } from "../generated/prisma/enums";
 import prisma from "../lib/prisma";
 import { checkAuthorization } from "../lib/utils";
-import { ProjectBody } from "../types/project.types";
+import { ProjectBody, ProjectQueries } from "../types/project.types";
 
 const addProject = async (
   userId: string,
@@ -30,7 +30,11 @@ const addProject = async (
   return addedProject;
 };
 
-const getProjects = async (userId: string, workspaceId: string) => {
+const getProjects = async (
+  userId: string,
+  workspaceId: string,
+  queries: ProjectQueries,
+) => {
   const userRole = await prisma.workspaceMember.findUnique({
     where: {
       userId_workspaceId: {
@@ -41,9 +45,24 @@ const getProjects = async (userId: string, workspaceId: string) => {
     select: { role: true },
   });
 
+  const {
+    page,
+    pageSize,
+    search,
+    shortKey: shortKeyArray = [],
+    status: statusArray = [],
+    sortOrder,
+  } = queries;
+
   const projects = await prisma.project.findMany({
     where: {
       workspaceId,
+      ...(search && { name: { contains: search, mode: "insensitive" } }),
+      ...(shortKeyArray.length > 0 && { shortKey: { in: shortKeyArray } }),
+      ...(statusArray?.length > 0 && { status: { in: statusArray } }),
+    },
+    orderBy: {
+      name: sortOrder,
     },
     select: {
       id: true,
@@ -53,6 +72,8 @@ const getProjects = async (userId: string, workspaceId: string) => {
       status: true,
       tasks: userRole.role !== Role.MEMBER,
     },
+    skip: (page - 1) * pageSize,
+    take: pageSize,
   });
 
   return projects;

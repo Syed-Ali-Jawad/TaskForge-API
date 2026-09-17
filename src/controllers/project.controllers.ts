@@ -6,6 +6,7 @@ import {
   getProjects,
   updateProjectById,
 } from "../services/project.services";
+import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from "../../constants";
 
 const addProjectHandler = async (req: Request, res: Response) => {
   const { workspaceId } = getParams(req.params);
@@ -20,7 +21,13 @@ const addProjectHandler = async (req: Request, res: Response) => {
 const getProjectsHandler = async (req: Request, res: Response) => {
   const { workspaceId } = getParams(req.params);
 
-  const projects = await getProjects(req.userId, workspaceId);
+  const query = {
+    ...req.query,
+    page: Number(req.query.page) || DEFAULT_PAGE,
+    pageSize: Number(req.query.pageSize) || DEFAULT_PAGE_SIZE,
+  } as Parameters<typeof getProjects>[2];
+
+  const projects = await getProjects(req.userId, workspaceId, query);
 
   return res.status(200).json({ projects });
 };

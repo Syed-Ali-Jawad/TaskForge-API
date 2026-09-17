@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  getProjectsQuerySchema,
   projectFieldsSchema,
   updateProjectSchema,
 } from "../validators/project.validators";
@@ -20,7 +21,11 @@ projectRouter.use(authenticate);
 
 projectRouter.post("/", validate(projectFieldsSchema), addProjectHandler);
 
-projectRouter.get("/", getProjectsHandler);
+projectRouter.get(
+  "/",
+  validate(getProjectsQuerySchema, "query"),
+  getProjectsHandler,
+);
 
 projectRouter.get("/:id", validate(paramsIdSchema), getProjectByIdHandler);
 
