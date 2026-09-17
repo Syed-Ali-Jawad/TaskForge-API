@@ -18,7 +18,7 @@ const projectFieldsSchema = z.object({
   description: z.string().optional(),
 });
 
-const getProjectsQuerySchema = paginationSchema.extend({
+const projectsQuerySchema = paginationSchema.extend({
   search: z.string().optional(),
   shortKey: z.preprocess(
     (value) => (Array.isArray(value) ? value : value ? [value] : value),
@@ -58,5 +58,5 @@ export {
   paramWorkspaceIdSchema,
   projectFieldsSchema,
   updateProjectSchema,
-  getProjectsQuerySchema,
+  projectsQuerySchema,
 };

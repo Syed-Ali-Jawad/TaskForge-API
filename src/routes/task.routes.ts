@@ -9,7 +9,11 @@ import {
 } from "../controllers/task.controllers";
 import { paramsIdSchema } from "../validators/common.validators";
 import validate from "../middlewares/validate.middleware";
-import { taskSchema, updateTaskSchema } from "../validators/task.validators";
+import {
+  taskQuerySchema,
+  taskSchema,
+  updateTaskSchema,
+} from "../validators/task.validators";
 
 const taskRouter = Router({
   mergeParams: true,
@@ -17,7 +21,7 @@ const taskRouter = Router({
 
 taskRouter.use(authenticate);
 
-taskRouter.get("/", getTasksHandler);
+taskRouter.get("/", validate(taskQuerySchema, "query"), getTasksHandler);
 
 taskRouter.get("/:id", validate(paramsIdSchema), getTaskByIdHandler);
 

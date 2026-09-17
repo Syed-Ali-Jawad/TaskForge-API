@@ -1,8 +1,9 @@
 import { Role, TaskPriority, TaskStatus } from "../generated/prisma/enums";
 import type { Prisma } from "../generated/prisma/client";
 import prisma from "../lib/prisma";
-import { TaskBody } from "../types/task.types";
+import { TaskBody, TaskQueryParams, TaskSortBy } from "../types/task.types";
 import AppError from "../error/app-error";
+import { SortOrder } from "../generated/prisma/internal/prismaNamespace";
 
 const taskFetch = {
   id: true,
@@ -21,12 +22,42 @@ const taskFetch = {
   },
 };
 
-const getTasks = async (projectId: string) => {
+const getTasks = async (projectId: string, queries: TaskQueryParams) => {
+  const {
+    page,
+    pageSize,
+    search,
+    assigneeId: assignedIdsArray = [],
+    reporterId: reporterIdsArray = [],
+    status: statusArray = [],
+    priority: priorityArray = [],
+    sortBy = TaskSortBy.CREATED_AT,
+    sortOrder = SortOrder.desc,
+  } = queries;
+
   const tasks = await prisma.task.findMany({
     where: {
       projectId,
+      ...(search && { title: { contains: search, mode: "insensitive" } }),
+      ...(assignedIdsArray?.length > 0 && {
+        assigneeId: { in: assignedIdsArray },
+      }),
+      ...(reporterIdsArray?.length > 0 && {
+        reporterId: { in: reporterIdsArray },
+      }),
+      ...(statusArray?.length > 0 && {
+        status: { in: statusArray },
+      }),
+      ...(priorityArray?.length > 0 && {
+        priority: { in: priorityArray },
+      }),
+    },
+    orderBy: {
+      [sortBy]: sortOrder,
     },
     select: taskFetch,
+    skip: (page - 1) * pageSize,
+    take: pageSize,
   });
 
   return tasks;

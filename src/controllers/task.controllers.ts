@@ -6,11 +6,18 @@ import {
   getTasks,
   updateTaskById,
 } from "../services/task.services";
+import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from "../../constants";
 
 const getTasksHandler = async (req: Request, res: Response) => {
   const { projectId } = getParams(req.params);
 
-  const tasks = await getTasks(projectId);
+  const queries = {
+    ...req.query,
+    page: Number(req.query.page) || DEFAULT_PAGE,
+    pageSize: Number(req.query.pageSize) || DEFAULT_PAGE_SIZE,
+  };
+
+  const tasks = await getTasks(projectId, queries);
 
   return res.status(200).json({ tasks });
 };

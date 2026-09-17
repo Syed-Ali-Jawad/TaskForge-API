@@ -1,3 +1,5 @@
+import { SortOrder } from "../generated/prisma/internal/prismaNamespace";
+
 interface TaskBody {
   id: string;
   title: string;
@@ -8,4 +10,24 @@ interface TaskBody {
   reporterId: string;
 }
 
-export { TaskBody };
+interface TaskQueryParams {
+  page: number;
+  pageSize: number;
+  search?: string;
+  assigneeId?: string[];
+  reporterId?: string[];
+  status?: string[];
+  priority?: string[];
+  sortBy?: TaskSortBy;
+  sortOrder?: SortOrder;
+}
+
+enum TaskSortBy {
+  CREATED_AT = "createdAt",
+  UPDATED_AT = "updatedAt",
+  COMPLETION_DATE = "completionDate",
+  DUE_DATE = "dueDate",
+  TITLE = "title",
+}
+
+export { TaskBody, TaskSortBy, TaskQueryParams };

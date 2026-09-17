@@ -1,5 +1,8 @@
 import { z } from "zod";
 import { TaskPriority, TaskStatus } from "../generated/prisma/enums";
+import { paginationSchema, sortQuerySchema } from "./common.validators";
+import { SortOrder } from "../generated/prisma/internal/prismaNamespace";
+import { TaskSortBy } from "../types/task.types";
 
 const paramsProjectIdSchema = z.object({
   projectId: z.uuid("Invalid UUID"),
@@ -24,4 +27,45 @@ const updateTaskSchema = taskSchema.partial().extend({
   status: z.enum(TaskStatus, { error: "Unknown status used" }).optional(),
 });
 
-export { paramsProjectIdSchema, taskSchema, updateTaskSchema };
+const taskQuerySchema = paginationSchema.extend({
+  search: z.string().optional(),
+  assigneeId: z
+    .preprocess(
+      (value: string) => value.split(","),
+      z.array(z.uuid("Invalid UUID")),
+    )
+    .optional(),
+  reporterId: z
+    .preprocess(
+      (value: string) => value.split(","),
+      z.array(z.uuid("Invalid UUID")),
+    )
+    .optional(),
+  status: z.preprocess(
+    (value) => (Array.isArray(value) ? value : value ? [value] : value),
+    z
+      .array(
+        z.enum(TaskStatus, {
+          error: "Input is not a valid Task Status",
+        }),
+      )
+      .optional(),
+  ),
+
+  priority: z.preprocess(
+    (value) => (Array.isArray(value) ? value : value ? [value] : value),
+    z
+      .array(
+        z.enum(TaskPriority, {
+          error: "Input is not a valid Task Status",
+        }),
+      )
+      .optional(),
+  ),
+  sortBy: z
+    .enum(TaskSortBy, { error: "Sort applied on invalid field" })
+    .optional(),
+  sortOrder: z.enum(SortOrder, { error: "Invalid sort order used." }),
+});
+
+export { paramsProjectIdSchema, taskSchema, updateTaskSchema, taskQuerySchema };
