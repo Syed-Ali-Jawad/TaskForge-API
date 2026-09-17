@@ -1,4 +1,4 @@
-import { TaskPriority, TaskStatus } from "../generated/prisma/enums";
+import { Role, TaskPriority, TaskStatus } from "../generated/prisma/enums";
 import type { Prisma } from "../generated/prisma/client";
 import prisma from "../lib/prisma";
 import { TaskBody } from "../types/task.types";
@@ -71,6 +71,7 @@ const addTask = async (projectId: string, body: TaskBody) => {
 };
 
 const updateTaskById = async (
+  userId: string,
   projectId: string,
   taskId: string,
   body: Partial<TaskBody>,
@@ -79,32 +80,50 @@ const updateTaskById = async (
     projectId,
     "Archived project can not recieve task updates.",
   );
-  const updatedTask = await prisma.task.update({
-    where: { projectId, id: taskId },
+  const role = await getUserRole(userId, projectId);
+
+  const updatedTask = await prisma.task.updateManyAndReturn({
+    where: {
+      projectId,
+      id: taskId,
+      ...(role === Role.MEMBER
+        ? {
+            OR: [{ assigneeId: userId }, { reporterId: userId }],
+          }
+        : {}),
+    },
     data: { ...body } as Prisma.TaskUncheckedUpdateInput,
   });
+
+  if (updatedTask.count === 0) {
+    throw new AppError(404, "Task not found or not authorized");
+  }
 
   return updateTaskById;
 };
 
-const deleteTask = async (projectId: string, id: string) => {
+const deleteTask = async (userId: string, projectId: string, id: string) => {
   await checkIfProjectArchived(
     projectId,
     "Task of an archived project can not be deleted.",
   );
-  
-  const deletedTask = await prisma.task.delete({
+
+  const role = await getUserRole(userId, projectId);
+  const deletedTask = await prisma.task.deleteMany({
     where: {
       projectId,
       id,
-    },
-    select: {
-      name: true,
-      project: {
-        name: true,
-      },
+      ...(role === Role.MEMBER
+        ? {
+            OR: [{ assigneeId: userId }, { reporterId: userId }],
+          }
+        : {}),
     },
   });
+
+  if (deletedTask.count === 0) {
+    throw new AppError(404, "Task not found or not authorized");
+  }
 
   return deletedTask;
 };
@@ -124,4 +143,22 @@ const checkIfProjectArchived = async (projectId: string, error: string) => {
   if (project?.isArchived) {
     throw new AppError(409, error);
   }
+};
+
+const getUserRole = async (userId: string, projectId: string) => {
+  const { workspaceId } = await prisma.project.findUnique({
+    where: { id: projectId },
+    select: { workspaceId: true },
+  });
+
+  const userRole = await prisma.workspaceMember.findUnique({
+    where: {
+      userId_workspaceId: {
+        userId,
+        workspaceId: workspaceId,
+      },
+    },
+    select: { role: true },
+  });
+  return userRole.role;
 };

@@ -37,7 +37,12 @@ const addTaskHandler = async (req: Request, res: Response) => {
 const updateTaskHandler = async (req: Request, res: Response) => {
   const { projectId, taskId } = getParams(req.params);
 
-  const updatedTask = await updateTaskById(projectId, taskId, req.body);
+  const updatedTask = await updateTaskById(
+    req.userId,
+    projectId,
+    taskId,
+    req.body,
+  );
 
   return res.status(200).json(updatedTask);
 };
@@ -45,13 +50,11 @@ const updateTaskHandler = async (req: Request, res: Response) => {
 const deleteTaskHandler = async (req: Request, res: Response) => {
   const { projectId, taskId } = getParams(req.params);
 
-  const deletedTask = await deleteTask(projectId, taskId);
+  const deletedTask = await deleteTask(req.userId, projectId, taskId);
 
-  return res
-    .status(200)
-    .json({
-      message: `Task ${deletedTask.name} from project ${deletedTask.project.name} has been deleted.`,
-    });
+  return res.status(200).json({
+    message: `Task ${deletedTask.name} from project ${deletedTask.project.name} has been deleted.`,
+  });
 };
 
 export {
@@ -59,7 +62,7 @@ export {
   getTaskByIdHandler,
   addTaskHandler,
   updateTaskHandler,
-  deleteTaskHandler
+  deleteTaskHandler,
 };
 
 const getParams = (params: any) => ({
