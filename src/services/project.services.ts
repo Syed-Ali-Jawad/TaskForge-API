@@ -15,7 +15,6 @@ const addProject = async (
       name: body.name,
       shortKey: body.shortKey,
       description: body.description || null,
-      status: ProjectStatus.ACTIVE,
       workspaceId,
     },
     select: {
