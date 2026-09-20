@@ -10,7 +10,7 @@ const createApp = () => {
   app.use(cors());
   app.use(express.json({ limit: "16kb" }));
   app.use(express.urlencoded({ extended: true }));
-  app.use(appRouter);
+  app.use("/api", appRouter);
 
   app.use(notFoundMiddleware);
   app.use(errorMiddleware);
