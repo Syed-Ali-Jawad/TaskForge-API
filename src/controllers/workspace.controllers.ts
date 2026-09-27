@@ -17,7 +17,7 @@ const createWorkspaceHandler = async (req: Request, res: Response) => {
   const userId = req.userId || "";
   const workspace = await createWorkspace(userId, name);
 
-  return res.status(201).json({ workspace });
+  return res.status(201).json({ ...workspace });
 };
 
 const getWorkspacesHandler = async (req: Request, res: Response) => {
@@ -32,14 +32,14 @@ const getWorkspaceByIdHandler = async (req: Request, res: Response) => {
   const { id } = req.params;
   const userId = req.userId || "";
 
-  const workspace = await getWorkSpacesById(userId, id?.[0]);
+  const workspace = await getWorkSpacesById(userId, id as string);
 
   return res.status(200).json(workspace);
 };
 
 const updateWorkspaceByIdHandler = async (req: Request, res: Response) => {
-  const name = req.body;
-  const id = req.params.id?.[0];
+  const { name } = req.body;
+  const id = req.params.id as string;
   const userId = req.userId || "";
 
   const updatedWorkspace = await updateWorkspaceById(id, userId, name);
@@ -48,7 +48,7 @@ const updateWorkspaceByIdHandler = async (req: Request, res: Response) => {
 };
 
 const deleteWorkspaceHandler = async (req: Request, res: Response) => {
-  const id = req.params.id?.[0];
+  const id = req.params.id as string;
   const userId = req.userId || "";
 
   const deletedWorkspace = await deleteWorkspace(id, userId);
@@ -60,7 +60,7 @@ const deleteWorkspaceHandler = async (req: Request, res: Response) => {
 };
 
 const updatedWorkspaceMemberHandler = async (req: Request, res: Response) => {
-  const workspaceId = req.params.id?.[0];
+  const workspaceId = req.params.id as string;
   const { role } = req.body;
   const userId = req.userId || "";
 
@@ -69,21 +69,27 @@ const updatedWorkspaceMemberHandler = async (req: Request, res: Response) => {
   return res.status(200).json(updatedMember);
 };
 
-const addWorkspaceMemberHandler = async (req: Request, res: Response) => {
+const joinWorkspaceHandler = async (req: Request, res: Response) => {
   const { role } = req.body;
   const userId = req.userId || "";
-  const workspaceId = req.params.id?.[0];
+  const workspaceId = req.params.id as string;
 
   const addedMember = await addWorkspaceMember(userId, workspaceId, role);
 
   return res.status(201).json(addedMember);
 };
 
-const deleteMemberFromWorkspaceHandler = async (
-  req: Request,
-  res: Response,
-) => {
-  const workspaceId = req.params.id?.[0];
+const addWorkspaceMemberHandler = async (req: Request, res: Response) => {
+  const { role, memberId } = req.body;
+  const workspaceId = req.params.id as string;
+
+  const addedMember = await addWorkspaceMember(memberId, workspaceId, role);
+
+  return res.status(201).json(addedMember);
+};
+
+const leaveWorkspaceHandler = async (req: Request, res: Response) => {
+  const workspaceId = req.params.id as string;
   const userId = req.userId || "";
 
   const deletedMember = await deleteMemberFromWorkspace(workspaceId, userId);
@@ -93,8 +99,19 @@ const deleteMemberFromWorkspaceHandler = async (
   });
 };
 
+const removeWorkspaceMemberHandler = async (req: Request, res: Response) => {
+  const workspaceId = req.params.id as string;
+  const memberId = req.params.memberId as string;
+  
+  const deletedMember = await deleteMemberFromWorkspace(workspaceId, memberId);
+
+  return res.status(200).json({
+    message: `${deletedMember.user.name} removed from members of ${deletedMember.workspace.name}`,
+  });
+};
+
 const getWorkspaceMembersHandler = async (req: Request, res: Response) => {
-  const workspaceId = req.params.id?.[0];
+  const workspaceId = req.params.id as string;
 
   const members = await getWorkspaceMembers(workspaceId);
 
@@ -108,7 +125,9 @@ export {
   updateWorkspaceByIdHandler,
   deleteWorkspaceHandler,
   updatedWorkspaceMemberHandler,
+  joinWorkspaceHandler,
+  leaveWorkspaceHandler,
+  getWorkspaceMembersHandler,
   addWorkspaceMemberHandler,
-  deleteMemberFromWorkspaceHandler,
-  getWorkspaceMembersHandler
+  removeWorkspaceMemberHandler,
 };

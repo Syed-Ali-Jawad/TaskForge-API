@@ -3,20 +3,24 @@ import authenticate from "../middlewares/authenicate.middleware";
 import {
   addWorkspaceMemberSchema,
   createWorkspaceSchema,
+  deleteMemberSchema,
+  joinWorkspaceSchema,
   updateWorkspaceByIdSchema,
   updateWorkspaceMemberSchema,
 } from "../validators/workspace.validators";
 import validate from "../middlewares/validate.middleware";
 import {
-  addWorkspaceMemberHandler,
+  joinWorkspaceHandler,
   createWorkspaceHandler,
-  deleteMemberFromWorkspaceHandler,
+  leaveWorkspaceHandler,
   deleteWorkspaceHandler,
   getWorkspaceByIdHandler,
   getWorkspaceMembersHandler,
   getWorkspacesHandler,
   updatedWorkspaceMemberHandler,
   updateWorkspaceByIdHandler,
+  addWorkspaceMemberHandler,
+  removeWorkspaceMemberHandler,
 } from "../controllers/workspace.controllers";
 import { paramsIdSchema } from "../validators/common.validators";
 
@@ -47,7 +51,11 @@ workspaceRouter.delete(
   deleteWorkspaceHandler,
 );
 
-workspaceRouter.get("/:id/members", validate(paramsIdSchema), getWorkspaceMembersHandler)
+workspaceRouter.get(
+  "/:id/members",
+  validate(paramsIdSchema),
+  getWorkspaceMembersHandler,
+);
 
 workspaceRouter.patch(
   "/:id/members",
@@ -63,10 +71,23 @@ workspaceRouter.post(
   addWorkspaceMemberHandler,
 );
 
-workspaceRouter.delete(
-  "/:id/members",
+workspaceRouter.post(
+  "/:id/join",
   validate(paramsIdSchema),
-  deleteMemberFromWorkspaceHandler,
+  validate(joinWorkspaceSchema),
+  joinWorkspaceHandler,
+);
+
+workspaceRouter.delete(
+  "/:id/leave",
+  validate(paramsIdSchema),
+  leaveWorkspaceHandler,
+);
+
+workspaceRouter.delete(
+  "/:id/members/:memberId",
+  validate(deleteMemberSchema, "params"),
+  removeWorkspaceMemberHandler,
 );
 
 export default workspaceRouter;

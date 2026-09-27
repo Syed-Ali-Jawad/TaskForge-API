@@ -10,13 +10,15 @@ const authenticate = (req: Request, _res: Response, next: NextFunction) => {
   const authorizationHeader = req.headers.authorization;
 
   if (!authorizationHeader) {
-    throw new AppError(401, "Unauthorized: No Authorziation header passed");
+    return next(
+      new AppError(401, "Unauthorized: No Authorziation header passed"),
+    );
   }
 
   const [scheme, token] = authorizationHeader.split(" ");
 
   if (scheme !== "Bearer" || !token) {
-    throw new AppError(401, "Unauthorized: No token passed");
+    return next(new AppError(401, "Unauthorized: No token passed"));
   }
 
   const decoded = verifyToken(token) as JwtPayload;

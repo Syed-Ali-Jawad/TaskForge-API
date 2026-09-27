@@ -4,6 +4,15 @@ import prisma from "../lib/prisma";
 import { checkAuthorization } from "../lib/utils";
 import { ProjectBody, ProjectQueries } from "../types/project.types";
 
+const taskFields = {
+  id: true,
+  title: true,
+  status: true,
+  priority: true,
+  dueDate: true,
+  assignee: { select: { id: true, name: true } },
+};
+
 const addProject = async (
   userId: string,
   workspaceId: string,
@@ -21,7 +30,7 @@ const addProject = async (
       name: true,
       shortKey: true,
       workspace: {
-        name: true,
+        select: { name: true },
       },
     },
   });
@@ -69,7 +78,12 @@ const getProjects = async (
       shortKey: true,
       description: true,
       status: true,
-      tasks: userRole.role !== Role.MEMBER,
+      tasks:
+        userRole?.role !== Role.MEMBER
+          ? {
+              select: taskFields,
+            }
+          : false,
     },
     skip: (page - 1) * pageSize,
     take: pageSize,
@@ -88,9 +102,9 @@ const getProjectById = async (workspaceId: string, projectId: string) => {
       id: true,
       name: true,
       shortKey: true,
-      descitpion: true,
+      description: true,
       status: true,
-      tasks: true,
+      tasks: { select: taskFields },
     },
   });
 
@@ -101,7 +115,7 @@ const updateProjectById = async (
   userId: string,
   projectId: string,
   workspaceId: string,
-  body: Partial<ProjectBody>,
+  body: Partial<ProjectBody> & { status?: ProjectStatus },
 ) => {
   await checkAuthorization(userId, workspaceId);
 
@@ -111,11 +125,11 @@ const updateProjectById = async (
       workspaceId,
     },
     select: {
-      isArchived: true,
+      status: true,
     },
   });
 
-  if (project.isArchived) {
+  if (!body.status && project?.status === ProjectStatus.ARCHIVED) {
     throw new AppError(409, "Archived project can not be edited");
   }
 

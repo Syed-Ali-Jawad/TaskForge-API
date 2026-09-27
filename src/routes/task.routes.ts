@@ -10,6 +10,7 @@ import {
 import { paramsIdSchema } from "../validators/common.validators";
 import validate from "../middlewares/validate.middleware";
 import {
+  paramsTaskSchema,
   taskQuerySchema,
   taskSchema,
   updateTaskSchema,
@@ -29,11 +30,15 @@ taskRouter.post("/", validate(taskSchema), addTaskHandler);
 
 taskRouter.patch(
   "/:id",
-  validate(paramsIdSchema),
+  validate(paramsTaskSchema, "params"),
   validate(updateTaskSchema),
   updateTaskHandler,
 );
 
-taskRouter.delete("/:id", validate(paramsIdSchema), deleteTaskHandler);
+taskRouter.delete(
+  "/:id",
+  validate(paramsTaskSchema, "params"),
+  deleteTaskHandler,
+);
 
 export default taskRouter;

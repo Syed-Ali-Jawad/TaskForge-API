@@ -1,36 +1,55 @@
+import AppError from "../error/app-error";
+import { Prisma } from "../generated/prisma/client";
 import { Role } from "../generated/prisma/enums";
 import prisma from "../lib/prisma";
 import { checkAuthorization } from "../lib/utils";
 
 const createWorkspace = async (userId: string, name: string) => {
-  const workspace = await prisma.workspace.create({
-    data: {
-      name,
-    },
-    select: {
-      id: true,
-      name: true,
-    },
-  });
-
-  const member = await prisma.workspaceMember.create({
-    data: {
-      userId,
-      workspaceId: workspace.id,
-      role: Role.OWNER,
-    },
-    select: {
-      userId: true,
-      role: true,
-      user: {
+  const result = await prisma.$transaction(async (tx) => {
+    let workspace;
+    try {
+      workspace = await tx.workspace.create({
+        data: {
+          name,
+          ownerId: userId,
+        },
         select: {
+          id: true,
           name: true,
         },
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+        throw new AppError(409, "A workspace with this name already exists.");
+      }
+
+      throw error;
+    }
+
+    const member = await tx.workspaceMember.create({
+      data: {
+        userId,
+        workspaceId: workspace.id,
+        role: Role.OWNER,
       },
-    },
+      select: {
+        userId: true,
+        role: true,
+        user: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    });
+
+    return { ...workspace, members: [member] };
   });
 
-  return { ...workspace, members: [member] };
+  return result;
 };
 
 const getWorkSpacesByUserId = async (userId: string) => {
@@ -41,17 +60,22 @@ const getWorkSpacesByUserId = async (userId: string) => {
     select: {
       role: true,
       workspace: {
-        id: true,
-        name: true,
+        select: { id: true, name: true },
       },
     },
   });
 
-  return workspaces;
+  const result = workspaces.map(({ role, workspace }) => ({
+    id: workspace.id,
+    name: workspace.name,
+    role,
+  }));
+
+  return result;
 };
 
 const getWorkSpacesById = async (userId: string, workspaceId: string) => {
-  const workspace = await prisma.workspace.findUnique({
+  let workspace = await prisma.workspace.findUnique({
     where: {
       id: workspaceId,
       members: {
@@ -60,9 +84,26 @@ const getWorkSpacesById = async (userId: string, workspaceId: string) => {
         },
       },
     },
+    select: {
+      id: true,
+      name: true,
+      members: {
+        select: { role: true, userId: true, user: { select: { name: true } } },
+      },
+      projects: true,
+    },
   });
 
-  return workspace;
+  if (!workspace) return workspace;
+
+  return {
+    ...workspace,
+    members: workspace.members.map((member) => ({
+      role: member.role,
+      memberName: member.user.name,
+      memberId: member.userId,
+    })),
+  };
 };
 
 const updateWorkspaceById = async (
@@ -125,7 +166,7 @@ const updateWorkspaceMember = async (
     },
     select: {
       workspace: {
-        name: true,
+        select: { name: true },
       },
       role: true,
     },
@@ -147,7 +188,7 @@ const addWorkspaceMember = async (
       role,
     },
     select: {
-      workspace: { name: true },
+      workspace: { select: { name: true } },
       role: true,
     },
   });
@@ -162,14 +203,22 @@ const getWorkspaceMembers = async (workspaceId: string) => {
     },
     select: {
       members: {
-        id: true,
-        name: true,
-        role: true,
+        select: {
+          id: true,
+          role: true,
+          user: { select: { name: true } },
+        },
       },
     },
   });
 
-  return members;
+  const result = members?.members.map(({ id, role, user }) => ({
+    id,
+    role,
+    name: user.name,
+  }));
+
+  return result;
 };
 
 const deleteMemberFromWorkspace = async (
@@ -185,9 +234,9 @@ const deleteMemberFromWorkspace = async (
       },
     },
     select: {
-      user: { name: true },
+      user: { select: { name: true } },
       workspace: {
-        name: true,
+        select: { name: true },
       },
     },
   });

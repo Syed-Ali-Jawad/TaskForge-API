@@ -1,27 +1,41 @@
 import { z } from "zod";
 import { ProjectStatus } from "../generated/prisma/enums";
-import { paginationSchema } from "./common.validators";
+import { paginationSchema, paramsIdSchema } from "./common.validators";
 import { SortOrder } from "../generated/prisma/internal/prismaNamespace";
 
 const paramWorkspaceIdSchema = z.object({
-  workspaceId: z.uuid("Invalid UUID"),
+  workspaceId: z.uuid("Invalid workspace UUID"),
 });
 
+const paramsProjectSchema = paramsIdSchema.and(paramWorkspaceIdSchema);
+
 const projectFieldsSchema = z.object({
-  name: z.string().min(2).max(15),
+  name: z
+    .string()
+    .min(2, { error: "Name shall be atleast 2 characters." })
+    .max(15, { error: "Name shall be atmost 15 characters" }),
   shortKey: z
     .string()
-    .min(2)
-    .max(5)
+    .min(2, { error: "Short Key can be miniumum 2 characters." })
+    .max(5, { error: "Short Key can be maxiumum 15 characters." })
     .regex(/^[A-Za-z]+$/, "Short key must contain only letters")
     .transform((value) => value.toUpperCase()),
-  description: z.string().optional(),
+  description: z
+    .string()
+    .transform((val) => val.trim())
+    .optional(),
 });
 
 const projectsQuerySchema = paginationSchema.extend({
-  search: z.string().optional(),
+  search: z
+    .string()
+    .transform((val) => val.trim())
+    .optional(),
   shortKey: z.preprocess(
-    (value) => (Array.isArray(value) ? value : value ? [value] : value),
+    (value) => {
+      if (value === undefined) return undefined;
+      return Array.isArray(value) ? value : [value];
+    },
     z
       .array(
         z
@@ -32,7 +46,10 @@ const projectsQuerySchema = paginationSchema.extend({
       .optional(),
   ),
   status: z.preprocess(
-    (value) => (Array.isArray(value) ? value : value ? [value] : value),
+    (value) => {
+      if (value === undefined) return undefined;
+      return Array.isArray(value) ? value : [value];
+    },
     z
       .array(
         z.enum(ProjectStatus, {
@@ -59,4 +76,5 @@ export {
   projectFieldsSchema,
   updateProjectSchema,
   projectsQuerySchema,
+  paramsProjectSchema,
 };

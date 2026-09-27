@@ -3,12 +3,12 @@ import { SortOrder } from "../generated/prisma/internal/prismaNamespace";
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from "../../constants";
 
 const paramsIdSchema = z.object({
-  id: z.string(),
+  id: z.uuid("Invalid UUID"),
 });
 
 const sortQuerySchema = z
   .object({
-    sortBy: z.string(),
+    sortBy: z.string().transform((val) => val.trim()),
     sortOrder: z.enum(SortOrder),
   })
   .optional();

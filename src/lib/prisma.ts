@@ -1,6 +1,8 @@
 import { PrismaClient } from "../generated/prisma/client";
-import { PrismaClientOptions } from "../generated/prisma/internal/prismaNamespace.ts";
+import { PrismaPg } from "@prisma/adapter-pg";
+import env from "../config/env";
 
-const prisma = new PrismaClient({} as PrismaClientOptions);
+const adapter = new PrismaPg({ connectionString: env.databaseUrl });
+const prisma = new PrismaClient({ adapter });
 
 export default prisma;

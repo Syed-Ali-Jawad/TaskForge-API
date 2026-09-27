@@ -14,8 +14,9 @@ const updateComment = async (
     },
     data: { comment },
     select: {
+      id: true,
       comment: true,
-      author: { name: true },
+      author: { select: { name: true } },
       updatedAt: true,
     },
   });
@@ -35,8 +36,9 @@ const addComment = async (
       taskId,
     },
     select: {
+      id: true,
       comment: true,
-      author: { name: true },
+      author: { select: { id: true, name: true } },
       createdAt: true,
     },
   });
@@ -56,11 +58,11 @@ const deleteComment = async (
       id: commentId,
     },
     select: {
-      id: true,
+      author: { select: { name: true } },
     },
   });
 
-  return deleteComment;
+  return deletedComment;
 };
 
 export { updateComment, addComment, deleteComment };

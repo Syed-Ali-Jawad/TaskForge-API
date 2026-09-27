@@ -7,15 +7,16 @@ import {
   updateTaskById,
 } from "../services/task.services";
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from "../../constants";
+import { taskQuerySchema } from "../validators/task.validators";
 
 const getTasksHandler = async (req: Request, res: Response) => {
   const { projectId } = getParams(req.params);
 
-  const queries = {
+  const queries = taskQuerySchema.parse({
     ...req.query,
     page: Number(req.query.page) || DEFAULT_PAGE,
     pageSize: Number(req.query.pageSize) || DEFAULT_PAGE_SIZE,
-  };
+  });
 
   const tasks = await getTasks(projectId, queries);
 
@@ -33,7 +34,7 @@ const getTaskByIdHandler = async (req: Request, res: Response) => {
 const addTaskHandler = async (req: Request, res: Response) => {
   const { projectId } = getParams(req.params);
 
-  const addedTask = await addTask(projectId, req.body);
+  const addedTask = await addTask(projectId, req.userId, req.body);
 
   return res.status(201).json({
     message: "Task created",
@@ -60,7 +61,7 @@ const deleteTaskHandler = async (req: Request, res: Response) => {
   const deletedTask = await deleteTask(req.userId, projectId, taskId);
 
   return res.status(200).json({
-    message: `Task ${deletedTask.name} from project ${deletedTask.project.name} has been deleted.`,
+    message: `Task "${deletedTask.title}" from project "${deletedTask.project.name}" has been deleted.`,
   });
 };
 
@@ -73,6 +74,6 @@ export {
 };
 
 const getParams = (params: any) => ({
-  projectId: params.projectId?.[0] || "",
-  taskId: params.id?.[0] || "",
+  projectId: params.projectId as string,
+  taskId: params.id as string,
 });

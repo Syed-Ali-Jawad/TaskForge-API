@@ -1,14 +1,11 @@
 import {
-  PrismaClient,
   Role,
   TaskPriority,
   TaskStatus,
 } from "../src/generated/prisma/client";
 import bcrypt from "bcrypt";
-import { PrismaClientOptions } from "../src/generated/prisma/internal/prismaNamespace";
+import prisma from "../src/lib/prisma";
 import env from "../src/config/env";
-
-const prisma = new PrismaClient({} as PrismaClientOptions);
 
 async function main() {
   // Clear existing seed data
@@ -66,6 +63,7 @@ async function main() {
   const workspace1 = await prisma.workspace.create({
     data: {
       name: "Main Workspace",
+      ownerId: user1.id,
     },
     select: {
       id: true,
@@ -75,6 +73,7 @@ async function main() {
   const workspace2 = await prisma.workspace.create({
     data: {
       name: "Secondary Workspace",
+      ownerId: user2.id,
     },
     select: {
       id: true,

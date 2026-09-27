@@ -7,7 +7,7 @@ import AppError from "../error/app-error";
 const loginUser = async (email: string, password: string) => {
   const user = await prisma.user.findUnique({
     where: { email },
-    select: { id: true, email: true, name: true },
+    select: { id: true, email: true, name: true, password: true },
   });
 
   if (!user) {
@@ -22,7 +22,9 @@ const loginUser = async (email: string, password: string) => {
 
   const token = signToken({ userId: user.id });
 
-  return { user, token };
+  const { password: _, ...userWithoutPassword } = user;
+
+  return { ...userWithoutPassword, token };
 };
 
 const registerUser = async (email: string, password: string, name: string) => {

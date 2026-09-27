@@ -7,6 +7,7 @@ import {
   updateProjectById,
 } from "../services/project.services";
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from "../../constants";
+import { projectsQuerySchema } from "../validators/project.validators";
 
 const addProjectHandler = async (req: Request, res: Response) => {
   const { workspaceId } = getParams(req.params);
@@ -21,11 +22,11 @@ const addProjectHandler = async (req: Request, res: Response) => {
 const getProjectsHandler = async (req: Request, res: Response) => {
   const { workspaceId } = getParams(req.params);
 
-  const query = {
+  const query = projectsQuerySchema.parse({
     ...req.query,
     page: Number(req.query.page) || DEFAULT_PAGE,
     pageSize: Number(req.query.pageSize) || DEFAULT_PAGE_SIZE,
-  } as Parameters<typeof getProjects>[2];
+  } as Parameters<typeof getProjects>[2]);
 
   const projects = await getProjects(req.userId, workspaceId, query);
 
@@ -43,6 +44,7 @@ const getProjectByIdHandler = async (req: Request, res: Response) => {
 const updateProjectByIdHandler = async (req: Request, res: Response) => {
   const { workspaceId, projectId } = getParams(req.params);
 
+  console.log(req.params);
   const updatedProject = await updateProjectById(
     req.userId,
     projectId,
@@ -76,6 +78,6 @@ export {
 };
 
 const getParams = (params: any) => ({
-  workspaceId: params.workspaceId?.[0] || "",
-  projectId: params.id?.[0] || "",
+  workspaceId: params.workspaceId as string,
+  projectId: params.id as string,
 });

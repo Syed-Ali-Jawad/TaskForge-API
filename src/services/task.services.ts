@@ -1,4 +1,9 @@
-import { Role, TaskPriority, TaskStatus } from "../generated/prisma/enums";
+import {
+  ProjectStatus,
+  Role,
+  TaskPriority,
+  TaskStatus,
+} from "../generated/prisma/enums";
 import type { Prisma } from "../generated/prisma/client";
 import prisma from "../lib/prisma";
 import { TaskBody, TaskQueryParams, TaskSortBy } from "../types/task.types";
@@ -15,10 +20,16 @@ const taskFetch = {
   createdAt: true,
   updatedAt: true,
   assignee: {
-    name: true,
+    select: {
+      id: true,
+      name: true,
+    },
   },
   reporter: {
-    name: true,
+    select: {
+      id: true,
+      name: true,
+    },
   },
 };
 
@@ -35,26 +46,38 @@ const getTasks = async (projectId: string, queries: TaskQueryParams) => {
     sortOrder = SortOrder.desc,
   } = queries;
 
+  console.log({
+    page,
+    pageSize,
+    skip: (page - 1) * pageSize,
+    sortBy,
+    sortOrder,
+  });
   const tasks = await prisma.task.findMany({
     where: {
       projectId,
       ...(search && { title: { contains: search, mode: "insensitive" } }),
-      ...(assignedIdsArray?.length > 0 && {
+      ...(assignedIdsArray.length > 0 && {
         assigneeId: { in: assignedIdsArray },
       }),
-      ...(reporterIdsArray?.length > 0 && {
+      ...(reporterIdsArray.length > 0 && {
         reporterId: { in: reporterIdsArray },
       }),
-      ...(statusArray?.length > 0 && {
-        status: { in: statusArray },
+      ...(statusArray.length > 0 && {
+        status: { in: statusArray as TaskStatus[] },
       }),
-      ...(priorityArray?.length > 0 && {
-        priority: { in: priorityArray },
+      ...(priorityArray.length > 0 && {
+        priority: { in: priorityArray as TaskPriority[] },
       }),
     },
-    orderBy: {
-      [sortBy]: sortOrder,
-    },
+    orderBy: [
+      {
+        [sortBy]: sortOrder,
+      },
+      {
+        id: "asc",
+      },
+    ],
     select: taskFetch,
     skip: (page - 1) * pageSize,
     take: pageSize,
@@ -72,10 +95,12 @@ const getTaskById = async (projectId: string, id: string) => {
     select: {
       ...taskFetch,
       comments: {
-        id: true,
-        comment: true,
-        author: { name: true },
-        createdAt: true,
+        select: {
+          id: true,
+          comment: true,
+          author: { select: { name: true } },
+          createdAt: true,
+        },
       },
     },
   });
@@ -83,17 +108,19 @@ const getTaskById = async (projectId: string, id: string) => {
   return task;
 };
 
-const addTask = async (projectId: string, body: TaskBody) => {
+const addTask = async (projectId: string, userId: string, body: TaskBody) => {
   await checkIfProjectArchived(
     projectId,
     "Archived project can't receive new tasks.",
   );
+
   const addedTask = await prisma.task.create({
     data: {
       ...body,
       priority: body.priority as TaskPriority,
       projectId,
       status: TaskStatus.TODO,
+      reporterId: userId,
     },
     select: taskFetch,
   });
@@ -147,7 +174,7 @@ const deleteTask = async (userId: string, projectId: string, id: string) => {
   );
 
   const role = await getUserRole(userId, projectId);
-  const deletedTask = await prisma.task.deleteMany({
+  const task = await prisma.task.findFirst({
     where: {
       projectId,
       id,
@@ -159,9 +186,19 @@ const deleteTask = async (userId: string, projectId: string, id: string) => {
     },
   });
 
-  if (deletedTask.count === 0) {
+  if (!task) {
     throw new AppError(404, "Task not found or not authorized");
   }
+
+  const deletedTask = await prisma.task.delete({
+    where: {
+      id: task.id,
+    },
+    select: {
+      title: true,
+      project: { select: { name: true } },
+    },
+  });
 
   return deletedTask;
 };
@@ -174,17 +211,17 @@ const checkIfProjectArchived = async (projectId: string, error: string) => {
       id: projectId,
     },
     select: {
-      isArchived: true,
+      status: true,
     },
   });
 
-  if (project?.isArchived) {
+  if (project?.status === ProjectStatus.ARCHIVED) {
     throw new AppError(409, error);
   }
 };
 
 const getUserRole = async (userId: string, projectId: string) => {
-  const { workspaceId } = await prisma.project.findUnique({
+  const project = await prisma.project.findUnique({
     where: { id: projectId },
     select: { workspaceId: true },
   });
@@ -193,10 +230,10 @@ const getUserRole = async (userId: string, projectId: string) => {
     where: {
       userId_workspaceId: {
         userId,
-        workspaceId: workspaceId,
+        workspaceId: project?.workspaceId!,
       },
     },
     select: { role: true },
   });
-  return userRole.role;
+  return userRole?.role;
 };

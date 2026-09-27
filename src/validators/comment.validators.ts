@@ -1,15 +1,13 @@
 import { z } from "zod";
+import { paramsIdSchema } from "./common.validators";
 
 const paramsTaskId = z.object({
   taskId: z.uuid("Invalid UUID"),
 });
 
+const paramsCommentIdSchema = paramsTaskId.and(paramsIdSchema);
+
 const commentSchema = z.object({
-  comment: z.string(),
-  taskId: z.uuid("Invalid UUID"),
-  authorId: z.uuid("Invalid UUID"),
+  comment: z.string().transform((val) => val.trim()),
 });
-
-const updateCommentSchema = commentSchema.partial();
-
-export { paramsTaskId, commentSchema, updateCommentSchema };
+export { paramsTaskId, commentSchema, paramsCommentIdSchema };

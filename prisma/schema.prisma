@@ -41,6 +41,7 @@ model User {
  name String
  email String @unique
  password String
+ ownedWorkspaces Workspace[]
 workspaces WorkspaceMember[]
 tasks Task[] @relation("TaskAssignee")
   reportedTasks Task[] @relation("TaskReporter")
@@ -52,10 +53,14 @@ tasks Task[] @relation("TaskAssignee")
 model Workspace {
   id String @id @default(uuid()) @db.Uuid
   name String
+  ownerId String @db.Uuid
   members WorkspaceMember[]
   projects Project[]
 
+  owner User @relation(fields: [ownerId], references: [id])
+
   @@map("workspaces")
+  @@unique([name, ownerId])
 }
 
 model WorkspaceMember {
@@ -114,6 +119,7 @@ model Comment {
   taskId String @db.Uuid
   authorId String @db.Uuid
 createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt @default(now())
 
   task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
   author User @relation(fields: [authorId], references: [id])

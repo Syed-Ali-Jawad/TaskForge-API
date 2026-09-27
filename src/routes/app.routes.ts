@@ -24,7 +24,6 @@ appRouter.use(
 
 appRouter.use(
   "/projects/:projectId/tasks",
-  validate(paramWorkspaceIdSchema),
   validate(paramsProjectIdSchema),
   taskRouter,
 );

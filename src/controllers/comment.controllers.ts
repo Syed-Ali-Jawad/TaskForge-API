@@ -9,6 +9,7 @@ const updateCommentHandler = async (req: Request, res: Response) => {
   const { taskId, commentId } = getParams(req.params);
   const { comment } = req.body;
 
+  console.log(req.params);
   const updatedComment = await updateComment(
     req.userId,
     taskId,
@@ -20,8 +21,9 @@ const updateCommentHandler = async (req: Request, res: Response) => {
 };
 
 const addCommentHandler = async (req: Request, res: Response) => {
-  const { comment, authorId } = req.body;
+  const { comment } = req.body;
   const { taskId } = getParams(req.params);
+  const authorId = req.userId;
 
   const addedComment = await addComment(taskId, authorId, comment);
 
@@ -31,14 +33,19 @@ const addCommentHandler = async (req: Request, res: Response) => {
 const deleteCommentHandler = async (req: Request, res: Response) => {
   const { taskId, commentId } = getParams(req.params);
 
-  await deleteComment(req.userId, taskId, commentId);
+  const deletedComment = await deleteComment(req.userId, taskId, commentId);
 
-  return res.status(200).json({ success: true });
+  return res
+    .status(200)
+    .json({
+      success: true,
+      message: `Comment done by "${deletedComment.author.name}" has been deleted.`,
+    });
 };
 
 export { updateCommentHandler, addCommentHandler, deleteCommentHandler };
 
 const getParams = (params: any) => ({
-  taskId: params.taskId?.[0] || "",
-  commentId: params.id?.[0] || "",
+  taskId: params.taskId as string,
+  commentId: params.id as string,
 });

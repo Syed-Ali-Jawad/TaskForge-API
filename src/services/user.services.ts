@@ -10,8 +10,10 @@ const getUser = async (userId: string) => {
       id: true,
       name: true,
       email: true,
-      workspaces: { name: true, role: true },
-      tasks: { title: true, status: true, dueDate: true },
+      workspaces: {
+        select: { role: true, workspace: { select: { name: true } } },
+      },
+      tasks: { select: { title: true, status: true, dueDate: true } },
     },
   });
 
@@ -28,6 +30,10 @@ const updateUser = async (userId: string, name?: string, password?: string) => {
     data: {
       ...(name && { name }),
       ...(password && { password: hashedPassword }),
+    },
+    select: {
+      id:true,
+      name: true,
     },
   });
 

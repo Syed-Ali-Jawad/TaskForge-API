@@ -2,7 +2,10 @@ import { Request, Response, NextFunction } from "express";
 import { ZodSchema } from "zod";
 import AppError from "../error/app-error";
 import { paramsIdSchema } from "../validators/common.validators";
-import { paramWorkspaceIdSchema } from "../validators/project.validators";
+import {
+  paramsProjectSchema,
+  paramWorkspaceIdSchema,
+} from "../validators/project.validators";
 import { paramsProjectIdSchema } from "../validators/task.validators";
 import { paramsTaskId } from "../validators/comment.validators";
 
@@ -30,4 +33,5 @@ const paramsSchemas: ZodSchema[] = [
   paramWorkspaceIdSchema,
   paramsProjectIdSchema,
   paramsTaskId,
+  paramsProjectSchema,
 ];

@@ -1,26 +1,39 @@
 import { z } from "zod";
 import { TaskPriority, TaskStatus } from "../generated/prisma/enums";
-import { paginationSchema, sortQuerySchema } from "./common.validators";
+import {
+  paginationSchema,
+  paramsIdSchema,
+  sortQuerySchema,
+} from "./common.validators";
 import { SortOrder } from "../generated/prisma/internal/prismaNamespace";
 import { TaskSortBy } from "../types/task.types";
 
 const paramsProjectIdSchema = z.object({
-  projectId: z.uuid("Invalid UUID"),
+  projectId: z.uuid("Invalid Project UUID"),
 });
 
+const paramsTaskSchema = paramsProjectIdSchema.and(paramsIdSchema);
+
 const taskSchema = z.object({
-  id: z.uuid("Invalid ID"),
   title: z
     .string()
     .min(5, { error: "Task title cant be lesser then 2 characters" })
-    .max(20, { error: "Task title cant be lengtheir than 20 characters" }),
-  description: z.string().min(5).max(120).optional(),
+    .max(20, { error: "Task title cant be lengtheir than 20 characters" })
+    .transform((val) => val.trim()),
+  description: z
+    .string()
+    .min(5)
+    .max(120)
+    .transform((val) => val.trim())
+    .optional(),
   priority: z.enum(TaskPriority, { error: "Invalid priority" }),
-  dueDate: z.string().refine((date) => new Date(date) >= new Date(), {
-    message: "Due date cannot be in the past",
-  }),
+  dueDate: z
+    .string()
+    .refine((date) => new Date(date) >= new Date(), {
+      message: "Due date cannot be in the past",
+    })
+    .transform((date) => new Date(date)),
   assigneeId: z.uuid("Invalid UUID").optional(),
-  reporterId: z.uuid("Invalid UUID"),
 });
 
 const updateTaskSchema = taskSchema.partial().extend({
@@ -28,7 +41,10 @@ const updateTaskSchema = taskSchema.partial().extend({
 });
 
 const taskQuerySchema = paginationSchema.extend({
-  search: z.string().optional(),
+  search: z
+    .string()
+    .transform((val) => val.trim())
+    .optional(),
   assigneeId: z
     .preprocess(
       (value: string) => value.split(","),
@@ -42,7 +58,10 @@ const taskQuerySchema = paginationSchema.extend({
     )
     .optional(),
   status: z.preprocess(
-    (value) => (Array.isArray(value) ? value : value ? [value] : value),
+    (value) => {
+      if (value === undefined) return undefined;
+      return Array.isArray(value) ? value : [value];
+    },
     z
       .array(
         z.enum(TaskStatus, {
@@ -53,7 +72,10 @@ const taskQuerySchema = paginationSchema.extend({
   ),
 
   priority: z.preprocess(
-    (value) => (Array.isArray(value) ? value : value ? [value] : value),
+    (value) => {
+      if (value === undefined) return undefined;
+      return Array.isArray(value) ? value : [value];
+    },
     z
       .array(
         z.enum(TaskPriority, {
@@ -65,7 +87,15 @@ const taskQuerySchema = paginationSchema.extend({
   sortBy: z
     .enum(TaskSortBy, { error: "Sort applied on invalid field" })
     .optional(),
-  sortOrder: z.enum(SortOrder, { error: "Invalid sort order used." }),
+  sortOrder: z
+    .enum(SortOrder, { error: "Invalid sort order used." })
+    .default(SortOrder.desc),
 });
 
-export { paramsProjectIdSchema, taskSchema, updateTaskSchema, taskQuerySchema };
+export {
+  paramsProjectIdSchema,
+  taskSchema,
+  updateTaskSchema,
+  taskQuerySchema,
+  paramsTaskSchema,
+};

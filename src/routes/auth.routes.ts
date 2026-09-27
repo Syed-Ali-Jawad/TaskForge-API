@@ -5,7 +5,7 @@ import validate from "../middlewares/validate.middleware";
 
 const authRouter = Router();
 
-authRouter.get("/login", validate(loginSchema), loginHandler);
+authRouter.post("/login", validate(loginSchema), loginHandler);
 
 authRouter.post("/register", validate(registerSchema), registerHandler);
 
