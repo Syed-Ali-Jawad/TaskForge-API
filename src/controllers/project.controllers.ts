@@ -44,7 +44,6 @@ const getProjectByIdHandler = async (req: Request, res: Response) => {
 const updateProjectByIdHandler = async (req: Request, res: Response) => {
   const { workspaceId, projectId } = getParams(req.params);
 
-  console.log(req.params);
   const updatedProject = await updateProjectById(
     req.userId,
     projectId,

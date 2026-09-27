@@ -9,7 +9,6 @@ const updateCommentHandler = async (req: Request, res: Response) => {
   const { taskId, commentId } = getParams(req.params);
   const { comment } = req.body;
 
-  console.log(req.params);
   const updatedComment = await updateComment(
     req.userId,
     taskId,

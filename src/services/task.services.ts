@@ -46,13 +46,6 @@ const getTasks = async (projectId: string, queries: TaskQueryParams) => {
     sortOrder = SortOrder.desc,
   } = queries;
 
-  console.log({
-    page,
-    pageSize,
-    skip: (page - 1) * pageSize,
-    sortBy,
-    sortOrder,
-  });
   const tasks = await prisma.task.findMany({
     where: {
       projectId,
