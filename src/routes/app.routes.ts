@@ -11,6 +11,8 @@ import commentRouter from "./comment.routes";
 import userRouter from "./user.routes";
 import { Request, Response } from "express";
 
+import { swaggerUi, swaggerDocument } from "../config/swagger";
+
 const appRouter = Router();
 
 appRouter.use("/auth", authRouter);
@@ -34,5 +36,7 @@ appRouter.use(
 );
 
 appRouter.use("/tasks/:taskId/comments", validate(paramsTaskId), commentRouter);
+
+appRouter.use("/swagger", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 export default appRouter;
