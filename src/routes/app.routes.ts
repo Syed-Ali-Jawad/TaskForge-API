@@ -16,7 +16,7 @@ const appRouter = Router();
 
 appRouter.use("/auth", authRouter);
 
-appRouter.use("/health", (_req: Request, res: Response) =>
+appRouter.get("/health", (_req: Request, res: Response) =>
   res.status(200).json({ message: "API is working fine" }),
 );
 
