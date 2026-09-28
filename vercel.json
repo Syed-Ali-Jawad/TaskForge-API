@@ -2,7 +2,7 @@
   "redirects": [
     {
       "source": "/",
-      "destination": "/api/swagger",
+      "destination": "/swagger",
       "permanent": false
     }
   ],
