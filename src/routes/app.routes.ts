@@ -36,6 +36,6 @@ appRouter.use(
 
 appRouter.use("/tasks/:taskId/comments", validate(paramsTaskId), commentRouter);
 
-appRouter.use("/swagger", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+appRouter.get("/swagger", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 export default appRouter;
