@@ -5,11 +5,5 @@
       "destination": "/api/swagger",
       "permanent": false
     }
-  ],
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api"
-    }
   ]
 }
