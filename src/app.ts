@@ -3,6 +3,7 @@ import cors from "cors";
 import errorMiddleware from "./middlewares/error.middleware";
 import appRouter from "./routes/app.routes";
 import notFoundMiddleware from "./middlewares/not-found.middleware";
+import { swaggerUi, swaggerDocument } from "./config/swagger";
 
 const createApp = () => {
   const app = express();
@@ -11,7 +12,7 @@ const createApp = () => {
   app.use(express.json({ limit: "16kb" }));
   app.use(express.urlencoded({ extended: true }));
   app.use("/api", appRouter);
-
+  app.use("/swagger", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
   app.use(notFoundMiddleware);
   app.use(errorMiddleware);
 
