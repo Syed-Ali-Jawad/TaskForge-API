@@ -12,7 +12,7 @@ const createApp = () => {
   app.use(express.json({ limit: "16kb" }));
   app.use(express.urlencoded({ extended: true }));
   app.use("/api", appRouter);
-  app.use("/swagger", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+  app.use("/", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
   app.use(notFoundMiddleware);
   app.use(errorMiddleware);
 
