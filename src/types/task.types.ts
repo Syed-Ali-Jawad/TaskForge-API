@@ -1,3 +1,4 @@
+import { TaskPriority } from "../generated/prisma/enums";
 import { SortOrder } from "../generated/prisma/internal/prismaNamespace";
 
 interface TaskBody {
