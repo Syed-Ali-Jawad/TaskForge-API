@@ -10,10 +10,15 @@ import { paramsTaskId } from "../validators/comment.validators";
 import commentRouter from "./comment.routes";
 import userRouter from "./user.routes";
 import { swaggerUi, swaggerDocument } from "../config/swagger";
+import { Request, Response } from "express";
 
 const appRouter = Router();
 
 appRouter.use("/auth", authRouter);
+
+appRouter.use("/health", (_req: Request, res: Response) =>
+  res.status(200).json({ message: "API is working fine" }),
+);
 
 appRouter.use("/user", userRouter);
 appRouter.use("/workspaces", workspaceRouter);
