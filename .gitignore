@@ -4,3 +4,6 @@ node_modules
 *.md
 
 /src/generated/prisma
+
+# Local npm cache used by tooling
+.npm-cache/

@@ -2,6 +2,10 @@ import { z } from "zod";
 import { Role } from "../generated/prisma/enums";
 import { paramsIdSchema } from "./common.validators";
 
+const enumSchema = z.enum(Role, {
+  error: `Invalid workspace role, Allowed: ${Role.ADMIN},${Role.MEMBER}, and ${Role.OWNER}`,
+});
+
 const createWorkspaceSchema = z.object({
   name: z
     .string()
@@ -17,22 +21,16 @@ const updateWorkspaceByIdSchema = z.object({
 });
 
 const updateWorkspaceMemberSchema = z.object({
-  role: z.enum(Role, {
-    error: "Invalid workspace role",
-  }),
+  role: enumSchema,
 });
 
 const addWorkspaceMemberSchema = z.object({
-  role: z.enum(Role, {
-    error: "Invalid workspace role",
-  }),
+  role: enumSchema,
   memberId: z.uuid("Inavlid UUID"),
 });
 
 const joinWorkspaceSchema = z.object({
-  role: z.enum(Role, {
-    error: "Invalid workspace role",
-  }),
+  role: enumSchema,
 });
 
 const deleteMemberSchema = paramsIdSchema.extend({

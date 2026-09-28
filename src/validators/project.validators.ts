@@ -3,6 +3,10 @@ import { ProjectStatus } from "../generated/prisma/enums";
 import { paginationSchema, paramsIdSchema } from "./common.validators";
 import { SortOrder } from "../generated/prisma/internal/prismaNamespace";
 
+const invalidProjectStatusError = {
+  error: `Invalid Project Status. Allowed: ${ProjectStatus.ACTIVE}, ${ProjectStatus.ARCHIVED}, and ${ProjectStatus.INACTIVE}`,
+};
+
 const paramWorkspaceIdSchema = z.object({
   workspaceId: z.uuid("Invalid workspace UUID"),
 });
@@ -50,13 +54,7 @@ const projectsQuerySchema = paginationSchema.extend({
       if (value === undefined) return undefined;
       return Array.isArray(value) ? value : [value];
     },
-    z
-      .array(
-        z.enum(ProjectStatus, {
-          error: "Input is not a valid Project Status",
-        }),
-      )
-      .optional(),
+    z.array(z.enum(ProjectStatus, invalidProjectStatusError)).optional(),
   ),
   sortOrder: z
     .enum(SortOrder, { error: "Invalid sort order used." })
@@ -64,11 +62,7 @@ const projectsQuerySchema = paginationSchema.extend({
 });
 
 const updateProjectSchema = projectFieldsSchema.partial().extend({
-  status: z
-    .enum(ProjectStatus, {
-      error: "Invalid Project Status",
-    })
-    .optional(),
+  status: z.enum(ProjectStatus, invalidProjectStatusError).optional(),
 });
 
 export {

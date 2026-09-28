@@ -9,6 +9,7 @@ import { paramsProjectIdSchema } from "../validators/task.validators";
 import { paramsTaskId } from "../validators/comment.validators";
 import commentRouter from "./comment.routes";
 import userRouter from "./user.routes";
+import { swaggerUi, swaggerDocument } from "../config/swagger";
 
 const appRouter = Router();
 
@@ -29,5 +30,7 @@ appRouter.use(
 );
 
 appRouter.use("/tasks/:taskId/comments", validate(paramsTaskId), commentRouter);
+
+appRouter.use("/swagger", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 export default appRouter;

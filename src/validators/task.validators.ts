@@ -8,6 +8,14 @@ import {
 import { SortOrder } from "../generated/prisma/internal/prismaNamespace";
 import { TaskSortBy } from "../types/task.types";
 
+const invalidTaskStatusError = {
+  error: `Invalid Task Status used. Allowed: ${TaskStatus.DONE}, ${TaskStatus.IN_PROGRESS}, and ${TaskStatus.TODO}`,
+};
+
+const invalidTaskPriorityError = {
+  error: `Invalid priority used: Allowed: ${TaskPriority.HIGH}, ${TaskPriority.LOW} and ${TaskPriority.MEDIUM}`,
+};
+
 const paramsProjectIdSchema = z.object({
   projectId: z.uuid("Invalid Project UUID"),
 });
@@ -26,7 +34,7 @@ const taskSchema = z.object({
     .max(120)
     .transform((val) => val.trim())
     .optional(),
-  priority: z.enum(TaskPriority, { error: "Invalid priority" }),
+  priority: z.enum(TaskPriority, invalidTaskPriorityError),
   dueDate: z
     .string()
     .refine((date) => new Date(date) >= new Date(), {
@@ -37,7 +45,7 @@ const taskSchema = z.object({
 });
 
 const updateTaskSchema = taskSchema.partial().extend({
-  status: z.enum(TaskStatus, { error: "Unknown status used" }).optional(),
+  status: z.enum(TaskStatus, invalidTaskStatusError).optional(),
 });
 
 const taskQuerySchema = paginationSchema.extend({
@@ -62,13 +70,7 @@ const taskQuerySchema = paginationSchema.extend({
       if (value === undefined) return undefined;
       return Array.isArray(value) ? value : [value];
     },
-    z
-      .array(
-        z.enum(TaskStatus, {
-          error: "Input is not a valid Task Status",
-        }),
-      )
-      .optional(),
+    z.array(z.enum(TaskStatus, invalidTaskStatusError)).optional(),
   ),
 
   priority: z.preprocess(
@@ -76,13 +78,7 @@ const taskQuerySchema = paginationSchema.extend({
       if (value === undefined) return undefined;
       return Array.isArray(value) ? value : [value];
     },
-    z
-      .array(
-        z.enum(TaskPriority, {
-          error: "Input is not a valid Task Status",
-        }),
-      )
-      .optional(),
+    z.array(z.enum(TaskPriority, invalidTaskPriorityError)).optional(),
   ),
   sortBy: z
     .enum(TaskSortBy, { error: "Sort applied on invalid field" })
