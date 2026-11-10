@@ -11,7 +11,13 @@ const loginHandler = async (req: Request, res: Response) => {
     token,
   } = await loginUser(email, password);
 
-  return res.status(200).json({ id, email: userEmail, name, token });
+  res.cookie("token", token, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "strict",
+  });
+
+  return res.status(200).json({ id, email: userEmail, name });
 };
 
 const registerHandler = async (req: Request, res: Response) => {
